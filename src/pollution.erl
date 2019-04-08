@@ -27,13 +27,22 @@ addStation(Name, Coords, Monitor) ->
   #monitor{stationProperties = (Monitor#monitor.stationProperties)#{Name => Coords}, coordsToReadouts = (Monitor#monitor.stationProperties)#{Coords => #{}}}.
 
 addValue(Key, Date, Type, Value, Monitor) when (is_float(Value) or is_integer(Value)) and is_record(Monitor, monitor) ->
-
   case is_tuple(Key) of
     true -> Readouts = maps:get(Key, Monitor#monitor.coordsToReadouts),
-      Monitor#monitor{coordsToReadouts = (Monitor#monitor.coordsToReadouts)#{Key => Readouts#{{Date, Type} => Value}}};
+      List = maps:get({Date,Type},Readouts,default),
+      case List of
+        default -> NewList = [Value];
+        _ -> NewList = List ++ [Value]
+      end,
+      Monitor#monitor{coordsToReadouts = (Monitor#monitor.coordsToReadouts)#{Key => Readouts#{{Date, Type} => NewList}}};
     false -> Coords = maps:get(Key, Monitor#monitor.stationProperties),
       Readouts = maps:get(Coords, Monitor#monitor.coordsToReadouts),
-      Monitor#monitor{coordsToReadouts = (Monitor#monitor.coordsToReadouts)#{Coords => Readouts#{{Date, Type} => Value}}}
+      List = maps:get({Date,Type},Readouts),
+      case List of
+        default -> NewList = [Value];
+        _ -> NewList = List ++ [Value]
+      end,
+      Monitor#monitor{coordsToReadouts = (Monitor#monitor.coordsToReadouts)#{Coords => Readouts#{{Date, Type} => NewList}}}
   end.
 
 
@@ -62,19 +71,25 @@ getOneValue(Key, Date, Type, Monitor) ->
       end
   end.
 
+getMean([],Sum,Count) -> {Sum,Count};
+getMean([H|T],Sum,Count) -> getMean(T,Sum+H,Count+1).
+
+
 getStationMean(Key, Type, Monitor) ->
   case is_tuple(Key) of
     true ->
       Readouts = maps:get(Key, Monitor#monitor.coordsToReadouts),
-      Fun = fun(MKey, MVal, {S,C}) -> {S + MVal, C + 1} end,
       Pred = fun({_, Mtype}, _) -> Mtype =:= Type end,
-      {Sum, Count} = maps:fold(Fun, {0,0}, maps:filter(Pred,Readouts)),
+      Map = maps:filter(Pred,Readouts),
+      Vals = maps:values(Map),
+      {Sum, Count} = getMean(Vals,0,0),
       Sum/Count;
     false ->
       Readouts = maps:get(maps:get(Key,Monitor#monitor.stationProperties), Monitor#monitor.coordsToReadouts),
-      Fun = fun(MKey, MVal, {S,C}) -> {S + MVal, C + 1} end,
       Pred = fun({_, Mtype}, _) -> Mtype =:= Type end,
-      {Sum, Count} = maps:fold(Fun, {0,0}, maps:filter(Pred,Readouts)),
+      Map = maps:filter(Pred,Readouts),
+      Vals = maps:values(Map),
+      {Sum, Count} = getMean(Vals,0,0),
       Sum/Count
   end.
 
