@@ -9,15 +9,12 @@
 -module(pollution).
 -author("Przemek").
 %% API
--export([createMonitor/0, addStation/3, addValue/5, removeValue/4, getOneValue/4]).
+-export([createMonitor/0, addStation/3, addValue/5, removeValue/4, getOneValue/4,getStationMean/3, getDailyMean/3, getMinMaxValue/4]).
 %%stationProperties is map from Name to Coordinates of station
 -record(monitor, {stationProperties = #{}, coordsToReadouts = #{}}).
 
-
-
 createMonitor() ->
   #monitor{stationProperties = #{}, coordsToReadouts = #{}}.
-
 
 validateStation(Name, Monitor) ->
   V = maps:get(Name, Monitor#monitor.stationProperties, default),
@@ -28,7 +25,6 @@ validateStation(Name, Monitor) ->
 addStation(Name, Coords, Monitor) ->
   validateStation(Name, Monitor),
   #monitor{stationProperties = (Monitor#monitor.stationProperties)#{Name => Coords}, coordsToReadouts = (Monitor#monitor.stationProperties)#{Coords => #{}}}.
-
 
 addValue(Key, Date, Type, Value, Monitor) when (is_float(Value) or is_integer(Value)) and is_record(Monitor, monitor) ->
 
@@ -42,7 +38,6 @@ addValue(Key, Date, Type, Value, Monitor) when (is_float(Value) or is_integer(Va
 
 
 removeValue(Key, Date, Type, Monitor) ->
-
   case is_tuple(Key) of
     true -> Readouts = maps:get(Key, Monitor#monitor.coordsToReadouts),
       Monitor#monitor{coordsToReadouts = (Monitor#monitor.coordsToReadouts)#{Key => maps:remove({Date, Type}, Readouts)}};
@@ -51,8 +46,6 @@ removeValue(Key, Date, Type, Monitor) ->
       Readouts = maps:get(Coords, Monitor#monitor.coordsToReadouts),
       Monitor#monitor{coordsToReadouts = (Monitor#monitor.coordsToReadouts)#{Coords => maps:remove({Date, Type}, Readouts)}}
   end.
-
-
 
 getOneValue(Key, Date, Type, Monitor) ->
   case is_tuple(Key) of
@@ -69,3 +62,24 @@ getOneValue(Key, Date, Type, Monitor) ->
       end
   end.
 
+getStationMean(Key, Type, Monitor) ->
+  case is_tuple(Key) of
+    true ->
+      Readouts = maps:get(Key, Monitor#monitor.coordsToReadouts),
+      Fun = fun(MKey, MVal, {S,C}) -> {S + MVal, C + 1} end,
+      Pred = fun({_, Mtype}, _) -> Mtype =:= Type end,
+      {Sum, Count} = maps:fold(Fun, {0,0}, maps:filter(Pred,Readouts)),
+      Sum/Count;
+    false ->
+      Readouts = maps:get(maps:get(Key,Monitor#monitor.stationProperties), Monitor#monitor.coordsToReadouts),
+      Fun = fun(MKey, MVal, {S,C}) -> {S + MVal, C + 1} end,
+      Pred = fun({_, Mtype}, _) -> Mtype =:= Type end,
+      {Sum, Count} = maps:fold(Fun, {0,0}, maps:filter(Pred,Readouts)),
+      Sum/Count
+  end.
+
+getDailyMean(Date, Type, Monitor) ->
+  erlang:error(not_implemented).
+
+getMinMaxValue(Coords,Date,Type, Monitor) ->
+  erlang:error(not_implemented).
