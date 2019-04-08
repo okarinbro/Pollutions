@@ -9,7 +9,7 @@
 -module(pollution).
 -author("Przemek").
 %% API
--export([createMonitor/0, addStation/3, addValue/5, removeValue/4, getOneValue/4,getStationMean/3, getDailyMean/3, getMinMaxValue/4]).
+-export([createMonitor/0, addStation/3, addValue/5, removeValue/4, getOneValue/4, getStationMean/3, getDailyMean/3, getMinMaxValue/4]).
 %%stationProperties is map from Name to Coordinates of station
 -record(monitor, {stationProperties = #{}, coordsToReadouts = #{}}).
 
@@ -66,20 +66,32 @@ getStationMean(Key, Type, Monitor) ->
   case is_tuple(Key) of
     true ->
       Readouts = maps:get(Key, Monitor#monitor.coordsToReadouts),
-      Fun = fun(MKey, MVal, {S,C}) -> {S + MVal, C + 1} end,
+      Fun = fun(_, MVal, {S, C}) -> {S + MVal, C + 1} end,
       Pred = fun({_, Mtype}, _) -> Mtype =:= Type end,
-      {Sum, Count} = maps:fold(Fun, {0,0}, maps:filter(Pred,Readouts)),
-      Sum/Count;
+      {Sum, Count} = maps:fold(Fun, {0, 0}, maps:filter(Pred, Readouts)),
+      Sum / Count;
     false ->
-      Readouts = maps:get(maps:get(Key,Monitor#monitor.stationProperties), Monitor#monitor.coordsToReadouts),
-      Fun = fun(MKey, MVal, {S,C}) -> {S + MVal, C + 1} end,
+      Readouts = maps:get(maps:get(Key, Monitor#monitor.stationProperties), Monitor#monitor.coordsToReadouts),
+      Fun = fun(_, MVal, {S, C}) -> {S + MVal, C + 1} end,
       Pred = fun({_, Mtype}, _) -> Mtype =:= Type end,
-      {Sum, Count} = maps:fold(Fun, {0,0}, maps:filter(Pred,Readouts)),
-      Sum/Count
+      {Sum, Count} = maps:fold(Fun, {0, 0}, maps:filter(Pred, Readouts)),
+      Sum / Count
   end.
 
-getDailyMean(Date, Type, Monitor) ->
+getMean([], Sum, N) -> {Sum, N};
+getMean([H | T], Sum, N) -> getMean(T, Sum + H, N + 1).
+
+getDailyMean(Day, Type, Monitor) ->
+  AllReadouts = maps:values(Monitor#monitor.coordsToReadouts),
+  Predicate = fun({{Mday, _}, Mtype},_) ->
+    (Day =:= Mday) and (Mtype =:= Type) end,
+  [Inside] =  AllReadouts,
+  FilteredReadoutsMap = maps:filter(Predicate, Inside),
+  ProperValues = lists:flatten(maps:values(FilteredReadoutsMap)),
+  {Sum, Count} = getMean(ProperValues, 0, 0),
+  Sum / Count.
+
+
+getMinMaxValue(Coords, Date, Type, Monitor) ->
   erlang:error(not_implemented).
 
-getMinMaxValue(Coords,Date,Type, Monitor) ->
-  erlang:error(not_implemented).
