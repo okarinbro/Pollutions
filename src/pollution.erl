@@ -86,12 +86,38 @@ getDailyMean(Day, Type, Monitor) ->
   Predicate = fun({{Mday, _}, Mtype},_) ->
     (Day =:= Mday) and (Mtype =:= Type) end,
   [Inside] =  AllReadouts,
+  %%FileteredReadoutsMap is map with given day and type in key
   FilteredReadoutsMap = maps:filter(Predicate, Inside),
   ProperValues = lists:flatten(maps:values(FilteredReadoutsMap)),
   {Sum, Count} = getMean(ProperValues, 0, 0),
   Sum / Count.
 
 
-getMinMaxValue(Coords, Date, Type, Monitor) ->
-  erlang:error(not_implemented).
 
+
+getMinMaxValue(Coords, Day, Type, Monitor) ->
+  AllReadouts = maps:values(maps:get(Coords,Monitor#monitor.coordsToReadouts)),
+  Predicate = fun({{Mday, _}, Mtype},_) ->
+    (Day =:= Mday) and (Mtype =:= Type) end,
+  [Inside] =  AllReadouts,
+  %%FileteredReadoutsMap is map with given day and type in key
+  FilteredReadoutsMap = maps:filter(Predicate, Inside),
+  ProperValues = lists:flatten(maps:values(FilteredReadoutsMap)),
+  Min = getMin(ProperValues, 5000),
+  Max = getMax(ProperValues,0),
+  {Min,Max}.
+
+getMax([], N) -> N;
+getMax([H|T],N) ->
+  case N < H of
+    true -> getMin(T,H);
+    _ -> getMin(T,N)
+  end.
+
+
+getMin([], N) -> N;
+getMin([H|T],N) ->
+  case N > H of
+    true -> getMin(T,H);
+    _ -> getMin(T,N)
+  end.
