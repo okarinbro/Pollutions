@@ -1,0 +1,13 @@
+c(pollution).
+rr(pollution).
+P = pollution:createMonitor().
+P1 = pollution:addStation("aleje", {50.2345, 18.3445}, P).
+P2 = pollution:addValue({50.2345, 18.3445}, calendar:local_time(), "PM10", 59, P1).
+P3 = pollution:addValue("aleje", calendar:local_time(), "PM2,5", 113, P2).
+P4 = pollution:addStation("muzeum", {51.2345, 17.3445}, P3).
+P5 = pollution:addValue({51.2345,17.3445},  calendar:local_time(), "PM10", 60, P4).
+P6 = pollution:addValue("aleje",  {{2019,4,7},{10,3,47}}, "PM10", 68, P5).
+P7= pollution:addValue("aleje",  {{2019,4,7},{16,3,47}}, "PM10", 65, P6).
+pollution:getDailyMean({2019,4,7}, "PM10", P7). 
+pollution:getStationMean("aleje", "PM10", P7).
+pollution:getMinMaxValue({50.2345,18.3445},{2019,4,7}, "PM10",P7).
