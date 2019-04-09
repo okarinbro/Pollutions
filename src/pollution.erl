@@ -24,7 +24,7 @@ validateStation(Name, Monitor) ->
   end.
 addStation(Name, Coords, Monitor) ->
   validateStation(Name, Monitor),
-  #monitor{stationProperties = (Monitor#monitor.stationProperties)#{Name => Coords}, coordsToReadouts = (Monitor#monitor.stationProperties)#{Coords => #{}}}.
+  #monitor{stationProperties = (Monitor#monitor.stationProperties)#{Name => Coords}, coordsToReadouts = (Monitor#monitor.coordsToReadouts)#{Coords => #{}}}.
 
 addValue(Key, Date, Type, Value, Monitor) when (is_float(Value) or is_integer(Value)) and is_record(Monitor, monitor) ->
 
@@ -85,24 +85,21 @@ getDailyMean(Day, Type, Monitor) ->
   AllReadouts = maps:values(Monitor#monitor.coordsToReadouts),
   Predicate = fun({{Mday, _}, Mtype},_) ->
     (Day =:= Mday) and (Mtype =:= Type) end,
-  [Inside] =  AllReadouts,
   %%FileteredReadoutsMap is map with given day and type in key
-  FilteredReadoutsMap = maps:filter(Predicate, Inside),
-  ProperValues = lists:flatten(maps:values(FilteredReadoutsMap)),
-  {Sum, Count} = getMean(ProperValues, 0, 0),
+  ProperValues = lists:map(fun(Map)-> maps:values(maps:filter(Predicate,Map)) end,AllReadouts),
+  Flat = lists:flatten(ProperValues),
+  {Sum, Count} = getMean(Flat, 0, 0),
   Sum / Count.
 
 
 
 
 getMinMaxValue(Coords, Day, Type, Monitor) ->
-  AllReadouts = maps:values(maps:get(Coords,Monitor#monitor.coordsToReadouts)),
+  AllReadouts = maps:get(Coords,Monitor#monitor.coordsToReadouts),
   Predicate = fun({{Mday, _}, Mtype},_) ->
     (Day =:= Mday) and (Mtype =:= Type) end,
-  [Inside] =  AllReadouts,
   %%FileteredReadoutsMap is map with given day and type in key
-  FilteredReadoutsMap = maps:filter(Predicate, Inside),
-  ProperValues = lists:flatten(maps:values(FilteredReadoutsMap)),
+  ProperValues = maps:values(maps:filter(Predicate,AllReadouts)),
   Min = getMin(ProperValues, 5000),
   Max = getMax(ProperValues,0),
   {Min,Max}.
@@ -110,8 +107,8 @@ getMinMaxValue(Coords, Day, Type, Monitor) ->
 getMax([], N) -> N;
 getMax([H|T],N) ->
   case N < H of
-    true -> getMin(T,H);
-    _ -> getMin(T,N)
+    true -> getMax(T,H);
+    _ -> getMax(T,N)
   end.
 
 
@@ -121,3 +118,4 @@ getMin([H|T],N) ->
     true -> getMin(T,H);
     _ -> getMin(T,N)
   end.
+
