@@ -22,16 +22,34 @@ validateStation(Name, Monitor) ->
     default -> ok;
     _ -> error("Station with given name already exists!")
   end.
+
 addStation(Name, Coords, Monitor) ->
   validateStation(Name, Monitor),
   #monitor{stationProperties = (Monitor#monitor.stationProperties)#{Name => Coords}, coordsToReadouts = (Monitor#monitor.coordsToReadouts)#{Coords => #{}}}.
 
-addValue(Key, Date, Type, Value, Monitor) when (is_float(Value) or is_integer(Value)) and is_record(Monitor, monitor) ->
+checkIfExistsN(Name,Monitor) ->
+  V = maps:get(Name,Monitor#monitor.stationProperties, default),
+  case V of
+    default -> error("station does not exist");
+    _ -> ok
+  end.
 
+checkIfExistsC(Coords,Monitor) ->
+  V = maps:get(Coords,Monitor#monitor.coordsToReadouts, default),
+  case V of
+    default -> error("station does not exist");
+    _ -> ok
+  end.
+
+addValue(Key, Date, Type, Value, Monitor) when (is_float(Value) or is_integer(Value)) and is_record(Monitor, monitor) ->
   case is_tuple(Key) of
-    true -> Readouts = maps:get(Key, Monitor#monitor.coordsToReadouts),
+    true ->
+      checkIfExistsC(Key,Monitor),
+      Readouts = maps:get(Key, Monitor#monitor.coordsToReadouts),
       Monitor#monitor{coordsToReadouts = (Monitor#monitor.coordsToReadouts)#{Key => Readouts#{{Date, Type} => Value}}};
-    false -> Coords = maps:get(Key, Monitor#monitor.stationProperties),
+    false ->
+      checkIfExistsN(Key,Monitor),
+      Coords = maps:get(Key, Monitor#monitor.stationProperties),
       Readouts = maps:get(Coords, Monitor#monitor.coordsToReadouts),
       Monitor#monitor{coordsToReadouts = (Monitor#monitor.coordsToReadouts)#{Coords => Readouts#{{Date, Type} => Value}}}
   end.
@@ -39,9 +57,12 @@ addValue(Key, Date, Type, Value, Monitor) when (is_float(Value) or is_integer(Va
 
 removeValue(Key, Date, Type, Monitor) ->
   case is_tuple(Key) of
-    true -> Readouts = maps:get(Key, Monitor#monitor.coordsToReadouts),
+    true ->
+      checkIfExistsC(Key,Monitor),
+      Readouts = maps:get(Key, Monitor#monitor.coordsToReadouts),
       Monitor#monitor{coordsToReadouts = (Monitor#monitor.coordsToReadouts)#{Key => maps:remove({Date, Type}, Readouts)}};
     false ->
+      checkIfExistsN(Key,Monitor),
       Coords = maps:get(Key, Monitor#monitor.stationProperties),
       Readouts = maps:get(Coords, Monitor#monitor.coordsToReadouts),
       Monitor#monitor{coordsToReadouts = (Monitor#monitor.coordsToReadouts)#{Coords => maps:remove({Date, Type}, Readouts)}}
