@@ -29,15 +29,15 @@ loop(MonitorState) ->
     terminate -> ok;
     {request, PID, {addStation, Name, Coords}} ->
       NextState = pollution:addStation(Name, Coords, MonitorState),
-      PID ! {reply, NextState},
+      PID ! {reply, ok},
       loop(NextState);
     {request, PID, {addValue, Key, Date, Type, Value}} ->
       NextState = pollution:addValue(Key, Date, Type, Value, MonitorState),
-      PID ! {reply, NextState},
+      PID ! {reply, ok},
       loop(NextState);
     {request, PID, {removeValue, Key, Date, Type}} ->
       NextState = pollution:removeValue(Key, Date, Type, MonitorState),
-      PID ! {reply, NextState},
+      PID ! {reply, ok},
       loop(NextState);
     {request, PID, {getOneValue, Key, Date, Type}} ->
       Val = pollution:getOneValue(Key, Date, Type, MonitorState),
