@@ -7,7 +7,7 @@
 %%% Created : 05. maj 2019 13:25
 %%%-------------------------------------------------------------------
 -module(pollution_server).
--author("Acer").
+-author("Przemek").
 
 %% API
 -export([start/0, stop/0, addStation/2, addValue/4, removeValue/3,
@@ -73,14 +73,14 @@ addValue(Key, Date, Type, Value) ->
 removeValue(Key, Date, Type) ->
   call({removeValue, Key, Date, Type}).
 
-getOneValue(_Arg0, _Arg1, _Arg2) ->
+getOneValue(Key, Date, Type) ->
   erlang:error(not_implemented).
 
-getStationMean(_Arg0, _Arg1) ->
+getStationMean(Key, Type) ->
   erlang:error(not_implemented).
 
-getDailyMean(_Arg0, _Arg1) ->
+getDailyMean(Day, Type) ->
   erlang:error(not_implemented).
 
-getMinMaxValue(_Arg0, _Arg1, _Arg2) ->
+getMinMaxValue(Coords, Day, Type) ->
   erlang:error(not_implemented).
