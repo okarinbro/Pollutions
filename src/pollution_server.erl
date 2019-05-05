@@ -74,13 +74,13 @@ removeValue(Key, Date, Type) ->
   call({removeValue, Key, Date, Type}).
 
 getOneValue(Key, Date, Type) ->
-  erlang:error(not_implemented).
+  call({getOneValue, Key, Date, Type}).
 
 getStationMean(Key, Type) ->
-  erlang:error(not_implemented).
+  call({getStationMean, Key, Type}).
 
 getDailyMean(Day, Type) ->
-  erlang:error(not_implemented).
+  call({getDailyMean, Day, Type}).
 
 getMinMaxValue(Coords, Day, Type) ->
-  erlang:error(not_implemented).
+  call({getMinMaxValue, Coords, Day, Type}).
