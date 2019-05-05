@@ -10,10 +10,7 @@
 -author("Acer").
 
 %% API
--export([start/0, stop/0]).
-
-
-
+-export([start/0, stop/0, addStation/2, addValue/4, removeValue/3]).
 
 start() ->
   ServerPID = spawn(fun() -> init() end),
@@ -41,3 +38,19 @@ loop(MonitorState) ->
       PID ! {reply, removed},
       loop(NextState)
   end.
+
+call(Msg) ->
+  server ! {request, self(), Msg},
+  receive
+    {reply, Reply} -> Reply
+  end.
+
+
+addStation(Name, Coords) ->
+  call({addStation, Name, Coords}).
+
+addValue(Key, Date, Type, Value) ->
+  call({addValue, Key, Date, Type, Value}).
+
+removeValue(Key, Date, Type) ->
+  call({removeValue, Key, Date, Type}).
