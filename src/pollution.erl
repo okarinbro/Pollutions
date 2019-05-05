@@ -46,12 +46,20 @@ addValue(Key, Date, Type, Value, Monitor) when (is_float(Value) or is_integer(Va
     true ->
       checkIfExistsC(Key, Monitor),
       Readouts = maps:get(Key, Monitor#monitor.coordsToReadouts),
-      Monitor#monitor{coordsToReadouts = (Monitor#monitor.coordsToReadouts)#{Key => Readouts#{{Date, Type} => Value}}};
+      Val = maps:get({{Date, Type}}, Readouts, val),
+      case Val of
+        val ->      Monitor#monitor{coordsToReadouts = (Monitor#monitor.coordsToReadouts)#{Key => Readouts#{{Date, Type} => Value}}};
+        _ -> error("this readout already exists")
+      end;
     false ->
       checkIfExistsN(Key, Monitor),
       Coords = maps:get(Key, Monitor#monitor.stationProperties),
       Readouts = maps:get(Coords, Monitor#monitor.coordsToReadouts),
-      Monitor#monitor{coordsToReadouts = (Monitor#monitor.coordsToReadouts)#{Coords => Readouts#{{Date, Type} => Value}}}
+      Val = maps:get({{Date, Type}}, Readouts, val),
+      case Val of
+        val ->      Monitor#monitor{coordsToReadouts = (Monitor#monitor.coordsToReadouts)#{Coords => Readouts#{{Date, Type} => Value}}};
+        _ -> error("this readout already exists")
+      end
   end.
 
 
@@ -110,9 +118,6 @@ getDailyMean(Day, Type, Monitor) ->
   Flat = lists:flatten(ProperValues),
   {Sum, Count} = getMean(Flat, 0, 0),
   Sum / Count.
-
-
-
 
 getMinMaxValue(Coords, Day, Type, Monitor) ->
   AllReadouts = maps:get(Coords, Monitor#monitor.coordsToReadouts),
