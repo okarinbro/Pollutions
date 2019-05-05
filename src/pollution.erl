@@ -27,15 +27,15 @@ addStation(Name, Coords, Monitor) ->
   validateStation(Name, Monitor),
   #monitor{stationProperties = (Monitor#monitor.stationProperties)#{Name => Coords}, coordsToReadouts = (Monitor#monitor.coordsToReadouts)#{Coords => #{}}}.
 
-checkIfExistsN(Name,Monitor) ->
-  V = maps:get(Name,Monitor#monitor.stationProperties, default),
+checkIfExistsN(Name, Monitor) ->
+  V = maps:get(Name, Monitor#monitor.stationProperties, default),
   case V of
     default -> error("station does not exist");
     _ -> ok
   end.
 
-checkIfExistsC(Coords,Monitor) ->
-  V = maps:get(Coords,Monitor#monitor.coordsToReadouts, default),
+checkIfExistsC(Coords, Monitor) ->
+  V = maps:get(Coords, Monitor#monitor.coordsToReadouts, default),
   case V of
     default -> error("station does not exist");
     _ -> ok
@@ -44,11 +44,11 @@ checkIfExistsC(Coords,Monitor) ->
 addValue(Key, Date, Type, Value, Monitor) when (is_float(Value) or is_integer(Value)) and is_record(Monitor, monitor) ->
   case is_tuple(Key) of
     true ->
-      checkIfExistsC(Key,Monitor),
+      checkIfExistsC(Key, Monitor),
       Readouts = maps:get(Key, Monitor#monitor.coordsToReadouts),
       Monitor#monitor{coordsToReadouts = (Monitor#monitor.coordsToReadouts)#{Key => Readouts#{{Date, Type} => Value}}};
     false ->
-      checkIfExistsN(Key,Monitor),
+      checkIfExistsN(Key, Monitor),
       Coords = maps:get(Key, Monitor#monitor.stationProperties),
       Readouts = maps:get(Coords, Monitor#monitor.coordsToReadouts),
       Monitor#monitor{coordsToReadouts = (Monitor#monitor.coordsToReadouts)#{Coords => Readouts#{{Date, Type} => Value}}}
@@ -58,11 +58,11 @@ addValue(Key, Date, Type, Value, Monitor) when (is_float(Value) or is_integer(Va
 removeValue(Key, Date, Type, Monitor) ->
   case is_tuple(Key) of
     true ->
-      checkIfExistsC(Key,Monitor),
+      checkIfExistsC(Key, Monitor),
       Readouts = maps:get(Key, Monitor#monitor.coordsToReadouts),
       Monitor#monitor{coordsToReadouts = (Monitor#monitor.coordsToReadouts)#{Key => maps:remove({Date, Type}, Readouts)}};
     false ->
-      checkIfExistsN(Key,Monitor),
+      checkIfExistsN(Key, Monitor),
       Coords = maps:get(Key, Monitor#monitor.stationProperties),
       Readouts = maps:get(Coords, Monitor#monitor.coordsToReadouts),
       Monitor#monitor{coordsToReadouts = (Monitor#monitor.coordsToReadouts)#{Coords => maps:remove({Date, Type}, Readouts)}}
@@ -104,10 +104,9 @@ getMean([H | T], Sum, N) -> getMean(T, Sum + H, N + 1).
 
 getDailyMean(Day, Type, Monitor) ->
   AllReadouts = maps:values(Monitor#monitor.coordsToReadouts),
-  Predicate = fun({{Mday, _}, Mtype},_) ->
+  Predicate = fun({{Mday, _}, Mtype}, _) ->
     (Day =:= Mday) and (Mtype =:= Type) end,
-  %%FileteredReadoutsMap is map with given day and type in key
-  ProperValues = lists:map(fun(Map)-> maps:values(maps:filter(Predicate,Map)) end,AllReadouts),
+  ProperValues = lists:map(fun(Map) -> maps:values(maps:filter(Predicate, Map)) end, AllReadouts),
   Flat = lists:flatten(ProperValues),
   {Sum, Count} = getMean(Flat, 0, 0),
   Sum / Count.
@@ -116,27 +115,27 @@ getDailyMean(Day, Type, Monitor) ->
 
 
 getMinMaxValue(Coords, Day, Type, Monitor) ->
-  AllReadouts = maps:get(Coords,Monitor#monitor.coordsToReadouts),
-  Predicate = fun({{Mday, _}, Mtype},_) ->
+  AllReadouts = maps:get(Coords, Monitor#monitor.coordsToReadouts),
+  Predicate = fun({{Mday, _}, Mtype}, _) ->
     (Day =:= Mday) and (Mtype =:= Type) end,
   %%FileteredReadoutsMap is map with given day and type in key
-  ProperValues = maps:values(maps:filter(Predicate,AllReadouts)),
+  ProperValues = maps:values(maps:filter(Predicate, AllReadouts)),
   Min = getMin(ProperValues, 5000),
-  Max = getMax(ProperValues,0),
-  {Min,Max}.
+  Max = getMax(ProperValues, 0),
+  {Min, Max}.
 
 getMax([], N) -> N;
-getMax([H|T],N) ->
+getMax([H | T], N) ->
   case N < H of
-    true -> getMax(T,H);
-    _ -> getMax(T,N)
+    true -> getMax(T, H);
+    _ -> getMax(T, N)
   end.
 
 
 getMin([], N) -> N;
-getMin([H|T],N) ->
+getMin([H | T], N) ->
   case N > H of
-    true -> getMin(T,H);
-    _ -> getMin(T,N)
+    true -> getMin(T, H);
+    _ -> getMin(T, N)
   end.
 
