@@ -32,10 +32,10 @@ pollutions_server_test() ->
   pollution_server:removeValue("muzeum", {{2019, 5, 5}, {11, 21, 8}}, "PM2,5"),
   % checking outputs:
   timer:sleep(1),
-%%  ?assert(pollution_server:getMinMaxValue("muzeum", {2019, 5, 5}, "PM10") == {48, 58}),
-%%  ?assert(pollution_server:getStationMean({53.1, 49.91}, "2,5") == 8.5),
-%%  ?assert(pollution_server:getOneValue("aleje", {{2019, 5, 6}, {10, 23, 18}}, "PM10") == 43),
-%%  ?assert(pollution_server:getDailyMean({2019, 5, 6}, "PM10") == 59.333333333333336),
+  ?assert(pollution_server:getMinMaxValue({53.1, 49.91}, {2019, 5, 5}, "PM10") == {48, 58}),
+  ?assert(pollution_server:getStationMean({53.1, 49.91}, "PM2,5") == 8.5),
+  ?assert(pollution_server:getOneValue("aleje", {{2019, 5, 6}, {18, 21, 8}}, "PM10") == 45),
+  ?assert(pollution_server:getDailyMean({2019, 5, 5}, "PM2,5") == 8.5),
   timer:sleep(1),
   pollution_server:stop().
 
