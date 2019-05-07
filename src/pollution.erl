@@ -123,7 +123,6 @@ getMinMaxValue(Coords, Day, Type, Monitor) ->
   AllReadouts = maps:get(Coords, Monitor#monitor.coordsToReadouts),
   Predicate = fun({{Mday, _}, Mtype}, _) ->
     (Day =:= Mday) and (Mtype =:= Type) end,
-  %%FileteredReadoutsMap is map with given day and type in key
   ProperValues = maps:values(maps:filter(Predicate, AllReadouts)),
   Min = getMin(ProperValues, 5000),
   Max = getMax(ProperValues, 0),

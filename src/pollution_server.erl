@@ -11,7 +11,7 @@
 
 %% API
 -export([start/0, stop/0, addStation/2, addValue/4, removeValue/3,
-  getOneValue/3, getStationMean/2, getDailyMean/2, getMinMaxValue/3]).
+  getOneValue/3, getStationMean/2, getDailyMean/2, getMinMaxValue/3, crash/0, init/0]).
 
 start() ->
   ServerPID = spawn(fun() -> init() end),
@@ -54,7 +54,9 @@ loop(MonitorState) ->
     {request, PID, {getMinMaxValue, Coords, Day, Type}} ->
       Val = pollution:getMinMaxValue(Coords, Day, Type, MonitorState),
       PID ! {reply, Val},
-      loop(MonitorState)
+      loop(MonitorState);
+    {request, PID, crash} ->
+      1 / 0
   end.
 
 call(Msg) ->
@@ -84,3 +86,6 @@ getDailyMean(Day, Type) ->
 
 getMinMaxValue(Coords, Day, Type) ->
   call({getMinMaxValue, Coords, Day, Type}).
+
+
+crash() -> server ! {request, self(), crash}.
